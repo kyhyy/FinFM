@@ -1,0 +1,26 @@
+{
+  "name": "sharkord-music-bot",
+  "version": "0.0.1",
+  "module": "src/index.ts",
+  "sharkord": {
+    "entry": "index.js",
+    "author": "Diogo Martino",
+    "homepage": "https://google.com",
+    "description": "A plugin that allows users to stream music directly within Sharkord",
+    "logo": "https://i.imgur.com/HEC4bHl.png"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist/sharkord-music-bot --target bun --minify --format esm && cp package.json dist/sharkord-music-bot/ && mkdir -p dist/sharkord-music-bot/bin",
+    "build:dev": "bun run build && cp -r dist/* /home/martino/repos/sharkord/apps/server/data/plugins/"
+  },
+  "dependencies": {
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
