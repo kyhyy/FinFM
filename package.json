@@ -5,7 +5,7 @@
   "sharkord": {
     "entry": "index.js",
     "author": "Diogo Martino",
-    "homepage": "https://google.com",
+    "homepage": "https://github.com/diogomartino/sharkord-music-bot",
     "description": "A plugin that allows users to stream music directly within Sharkord",
     "logo": "https://i.imgur.com/HEC4bHl.png"
   },
