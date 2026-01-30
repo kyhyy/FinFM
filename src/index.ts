@@ -94,6 +94,7 @@ const startMusicStream = async (
   ctx: PluginContext,
   channelId: number,
   sourceUrl: string,
+  bitrateSetting: string,
 ) => {
   const state = getState(channelId);
 
@@ -163,6 +164,7 @@ const startMusicStream = async (
       rtpHost: ip,
       audioRtpPort: state.audioTransport.tuple.localPort,
       volume: state.volume,
+      bitrate: bitrateSetting,
       error: (...m) => ctx.error(...m),
       log: (...m) => ctx.log(...m),
       debug: (...m) => {
@@ -180,7 +182,7 @@ const startMusicStream = async (
       key: "music",
       channelId,
       title: "Music Bot Stream",
-      avatarUrl: "https://commons.wikimedia.org/wiki/File:Music_logo.png",
+      avatarUrl: "https://i.imgur.com/v8sf4BM.png",
       producers: {
         audio: state.audioProducer,
       },
@@ -203,7 +205,17 @@ const startMusicStream = async (
   }
 };
 
-const onLoad = (ctx: PluginContext) => {
+const onLoad = async (ctx: PluginContext) => {
+  const settings = await ctx.settings.register([
+    {
+      key: "bitrate",
+      name: "Bitrate",
+      description: "The bitrate for the music stream",
+      type: "string",
+      defaultValue: "128k",
+    },
+  ]);
+
   ctx.commands.register<{ query: string }>({
     name: "play",
     description: "Play music from YouTube or a direct URL",
@@ -234,7 +246,12 @@ const onLoad = (ctx: PluginContext) => {
         sourceUrl = `ytsearch:${sourceUrl}`;
       }
 
-      return startMusicStream(ctx, channelId, sourceUrl);
+      return startMusicStream(
+        ctx,
+        channelId,
+        sourceUrl,
+        await settings.get("bitrate"),
+      );
     },
   });
 
@@ -270,7 +287,12 @@ const onLoad = (ctx: PluginContext) => {
 
       ctx.log(`Direct URL: ${input.url} in channel ${channelId}`);
 
-      return startMusicStream(ctx, channelId, input.url);
+      return startMusicStream(
+        ctx,
+        channelId,
+        input.url,
+        await settings.get("bitrate"),
+      );
     },
   });
 

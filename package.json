@@ -7,7 +7,7 @@
     "author": "Diogo Martino",
     "homepage": "https://github.com/diogomartino/sharkord-music-bot",
     "description": "A plugin that allows users to stream music directly within Sharkord",
-    "logo": "https://i.imgur.com/HEC4bHl.png"
+    "logo": "https://i.imgur.com/v8sf4BM.png"
   },
   "type": "module",
   "scripts": {

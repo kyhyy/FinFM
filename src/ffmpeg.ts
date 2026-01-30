@@ -18,6 +18,7 @@ type TMusicOptions = {
   audioRtpPort: number;
 
   volume?: number; // 0-100, default 100
+  bitrate?: string;
   log: (...messages: unknown[]) => void;
   error: (...messages: unknown[]) => void;
   debug: (...messages: unknown[]) => void;
@@ -61,6 +62,28 @@ const spawnMusicStream = async (
 
   const volumeLevel = Math.min(100, Math.max(0, options.volume ?? 100)) / 100;
 
+  const normalizeBitrate = (bitrate?: string): string => {
+    if (!bitrate) return "192k";
+    const trimmed = bitrate.trim();
+
+    if (!trimmed) return "192k";
+
+    if (/^\d+(?:\.\d+)?k$/i.test(trimmed)) return trimmed.toLowerCase();
+    if (/^\d+$/.test(trimmed)) return trimmed;
+    return "192k";
+  };
+
+  const audioBitrate = normalizeBitrate(options.bitrate);
+
+  if (audioBitrate === "192k" && options.bitrate) {
+    options.log(
+      "Invalid bitrate setting, using default 192k:",
+      options.bitrate,
+    );
+  }
+
+  options.debug("Using audio bitrate:", audioBitrate);
+
   const ffmpegArgs = [
     "-hide_banner",
     "-nostats",
@@ -82,7 +105,7 @@ const spawnMusicStream = async (
     "-ac",
     "2",
     "-b:a",
-    "192k",
+    audioBitrate,
     "-application",
     "audio",
 
