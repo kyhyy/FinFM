@@ -1,4 +1,10 @@
-import { type PluginContext } from "@sharkord/plugin-sdk";
+import {
+  type AppData,
+  type PlainTransport,
+  type PluginContext,
+  type Producer,
+  type Transport,
+} from "@sharkord/plugin-sdk";
 import { spawnMusicStream, killMusicStream } from "./ffmpeg";
 import { isYouTubeUrl } from "./yt-dlp";
 import type { TMusicStreamResult } from "./ffmpeg";
@@ -7,8 +13,8 @@ let debug = false;
 
 type ChannelStreamState = {
   ffmpegProcess: TMusicStreamResult["process"] | null;
-  audioProducer: any;
-  audioTransport: any;
+  audioProducer: Producer | null;
+  audioTransport: PlainTransport<AppData> | null;
   router: any;
   routerCloseHandler: ((...args: unknown[]) => void) | null;
   producerCloseHandler: ((...args: unknown[]) => void) | null;
@@ -52,7 +58,7 @@ const cleanupChannel = (channelId: number) => {
 
   state.ffmpegProcess = null;
 
-  if (state.producerCloseHandler) {
+  if (state.producerCloseHandler && state.audioProducer) {
     state.audioProducer.observer.off("close", state.producerCloseHandler);
   }
 
