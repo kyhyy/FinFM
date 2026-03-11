@@ -6,7 +6,7 @@ import { constants as fsConstants } from "fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-type TYtDlpResult = { url: string; title: string };
+type TYtDlpResult = { url: string; title: string; originalHostname: string };
 
 type TYtDlpOptions = {
   log: (...messages: unknown[]) => void;
@@ -57,6 +57,26 @@ const runYtDlp = async (
   return { stdout, stderr, exitCode };
 };
 
+const resolveGoogleVideoUrl = async (url: string): Promise<{ resolvedUrl: string; originalHostname: string }> => {
+  const originalHostname = new URL(url).hostname;
+  try {
+    const parsed = new URL(url);
+    const proc = Bun.spawn({
+      cmd: ["getent", "ahostsv4", originalHostname],
+      stdout: "pipe",
+      stderr: "ignore",
+      stdin: "ignore",
+    });
+    const output = await new Response(proc.stdout).text();
+    const ip = output.trim().split(/\s+/)[0];
+    if (ip) {
+      parsed.hostname = ip;
+      return { resolvedUrl: parsed.toString(), originalHostname };
+    }
+  } catch {}
+  return { resolvedUrl: url, originalHostname };
+};
+
 const fetchYouTubeAudio = async (
   sourceUrl: string,
   options: TYtDlpOptions,
@@ -67,12 +87,13 @@ const fetchYouTubeAudio = async (
   options.log("Using yt-dlp binary at:", ytDlpPath);
   options.log("Fetching audio URL from YouTube:", sourceUrl);
 
-  const base = [ytDlpPath, "--js-runtimes", "bun"];
+  const ffmpegPath = path.join(__dirname, "bin", process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg");
+  const base = [ytDlpPath, "--js-runtimes", "bun", "--ffmpeg-location", ffmpegPath];
   const cookiesArgs = (await fileExists(cookiesPath))
     ? ["--cookies", cookiesPath]
     : [];
 
-  const urlCmd = [...base, ...cookiesArgs, "-f", "bestaudio", "-g", sourceUrl];
+  const urlCmd = [...base, ...cookiesArgs, "-f", "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio", "-g", sourceUrl];
 
   options.log("Running command:", urlCmd.join(" "));
 
@@ -85,6 +106,8 @@ const fetchYouTubeAudio = async (
   const url = urlRes.stdout.trim().split(/\r?\n/).filter(Boolean)[0];
 
   if (!url) throw new Error("yt-dlp returned empty URL");
+
+  const { resolvedUrl, originalHostname } = await resolveGoogleVideoUrl(url);
 
   const titleCmd = [...base, ...cookiesArgs, "--get-title", sourceUrl];
 
@@ -99,10 +122,10 @@ const fetchYouTubeAudio = async (
   const title =
     titleRes.stdout.trim().split(/\r?\n/).filter(Boolean)[0] ?? sourceUrl;
 
-  options.log("Audio URL fetched:", url);
+  options.log("Audio URL fetched:", resolvedUrl);
   options.log("Title fetched:", title);
 
-  return { url, title };
+  return { url: resolvedUrl, title, originalHostname };
 };
 
 export { fetchYouTubeAudio, isYouTubeUrl };

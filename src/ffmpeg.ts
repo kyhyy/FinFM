@@ -51,6 +51,8 @@ const spawnMusicStream = async (
     title = ytResult.title;
 
     inputArgs = [
+      "-headers",
+      `Host: ${ytResult.originalHostname}\r\n`,
       "-reconnect",
       "1",
       "-reconnect_streamed",
@@ -128,7 +130,6 @@ const spawnMusicStream = async (
     stdin: "ignore",
   });
 
-  // stderr forwarder (with a tiny yield to prevent event-loop starvation)
   (async () => {
     if (!ffmpegProcess.stderr) return;
 
