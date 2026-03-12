@@ -93,8 +93,7 @@ const fetchYouTubeAudio = async (
     ? ["--cookies", cookiesPath]
     : [];
 
-  const urlCmd = [...base, ...cookiesArgs, "-f", "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio", "-g", sourceUrl];
-
+  const urlCmd = [...base, ...cookiesArgs, "-f", "bestaudio", "-g", sourceUrl];
   options.log("Running command:", urlCmd.join(" "));
 
   const urlRes = await runYtDlp(urlCmd, options);

@@ -206,6 +206,7 @@ const advanceQueue = async (
 ) => {
   const state = channelStreams.get(channelId);
   if (!state) return;
+  if (!state.ffmpegProcess) return;
 
   cleanupStream(channelId);
 
@@ -321,9 +322,13 @@ const onLoad = async (ctx: PluginContext) => {
 
       const skipped = state.currentSong ?? "current song";
       const bitrateSetting = await settings.get("bitrate");
-
       const wasLooping = state.loop;
       state.loop = false;
+
+      killMusicStream(state.ffmpegProcess);
+      state.ffmpegProcess = null;
+
+      await new Promise<void>((r) => setTimeout(r, 100));
 
       cleanupStream(channelId);
 
